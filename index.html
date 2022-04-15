@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solitaire</title>
+
+    <style>
+        body {
+            background: green;
+            height: 100vh;
+            margin: 0px;
+            padding: 0px;
+        }
+        
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(7, .1fr);
+            padding: 50px;
+        }
+        
+        .stocks {
+            display: grid;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .stock {
+            top: 0;
+            left: 0;
+            position: absolute;
+            margin: auto;
+        }
+        
+        .stocks .stock-item {
+            grid-row-start: 1;
+            grid-column-start: 1;
+        }
+        
+        .stock-item img {
+            width: 100px;
+        }
+        
+        .empty-waste {
+            display: grid;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: rgb(0 0 0 / 25%) 0px 0px 5px 5px inset;
+            border-radius: 12px;
+        }
+        
+        .empty-waste .waste-item {
+            grid-row-start: 1;
+            grid-column-start: 1;
+            top: 0;
+            left: 0;
+            position: absolute;
+            margin: auto;
+        }
+        
+        .grid-item {
+            margin: 20px;
+        }
+        
+        .foundation {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: rgb(0 0 0 / 25%) 0px 0px 5px 5px inset;
+            border-radius: 12px;
+        }
+        
+        .foundation .center {
+            width: 50px;
+        }
+        
+        .card {
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- #https://cardgames.io/solitaire/#rules -->
+    <div class="game-container" id="app">
+
+
+        <div class="grid-item stocks" id="stocks">
+            <div class="stock-item" v-for="stock in stocks">
+                <img src="images/card-hidden.png" />
+            </div>
+        </div>
+        <div class="grid-item empty-waste" id="empty-waste">
+
+        </div>
+        <div class="grid-item">
+
+        </div>
+        <div class="grid-item foundation">
+            <img src="images/hearts.png" class="center" />
+        </div>
+        <div class="grid-item foundation">
+            <img src="images/spades.png" class="center" />
+        </div>
+        <div class="grid-item foundation">
+            <img src="images/diamonds.png" class="center" />
+        </div>
+        <div class="grid-item foundation">
+            <img src="images/clubs.png" class="center" />
+        </div>
+        <div class="grid-item" v-for="index in 7">
+
+            <div class="stock-item" v-for="(card,key) in tableau[index-1]" :style="key>=1? 'margin-top:-130px' : '' ">
+                <img src="images/card-hidden.png" v-show="!card.revealed" />
+                <img :src=`images/cards/${card.image}.png` v-show="card.revealed" class="card" />
+            </div>
+        </div>
+
+
+
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    cards: [],
+                    stocks: [],
+                    tableau: [],
+
+                };
+            },
+
+            created() {
+                this.initializeCards();
+
+                let shuffle = this.cards.sort(() => Math.random() - 0.5)
+
+                this.stocks = shuffle.slice(0, 24);
+
+                shuffle = shuffle.slice(24, 52)
+
+                for (let i = 1; i <= 7; i++) {
+                    this.tableau.push(shuffle.splice(0, i))
+                }
+
+                this.tableau.forEach((item, index) => {
+                    this.$set(this.tableau[index][item.length - 1], 'revealed', true);
+                });
+            },
+
+            methods: {
+                initializeCards() {
+                    this.cards = [{
+                            type: 'club',
+                            image: '2 of clubs',
+                            order: 2,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: '3 of clubs',
+                            order: 3,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: '4 of clubs',
+                            order: 3,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: '5 of clubs',
+                            order: 5,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: '6 of clubs',
+                            order: 6,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: '7 of clubs',
+                            order: 7,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: '8 of clubs',
+                            order: 8,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: '9 of clubs',
+                            order: 9,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: '10 of clubs',
+                            order: 10,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: 'a of clubs',
+                            order: 1,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: 'j of clubs',
+                            order: 11,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: 'k of clubs',
+                            order: 12,
+                            revealed: false
+                        }, {
+                            type: 'club',
+                            image: 'q of clubs',
+                            order: 13,
+                            revealed: false
+                        },
+
+
+                        {
+                            type: 'heart',
+                            image: '2 of hearts',
+                            order: 2,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: '3 of hearts',
+                            order: 3,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: '4 of hearts',
+                            order: 3,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: '5 of hearts',
+                            order: 5,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: '6 of hearts',
+                            order: 6,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: '7 of hearts',
+                            order: 7,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: '8 of hearts',
+                            order: 8,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: '9 of hearts',
+                            order: 9,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: '10 of hearts',
+                            order: 10,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: 'a of hearts',
+                            order: 1,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: 'j of hearts',
+                            order: 11,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: 'k of hearts',
+                            order: 12,
+                            revealed: false
+                        }, {
+                            type: 'heart',
+                            image: 'q of hearts',
+                            order: 13,
+                            revealed: false
+                        },
+
+                        {
+                            type: 'diamond',
+                            image: '2 of diamonds',
+                            order: 2,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: '3 of diamonds',
+                            order: 3,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: '4 of diamonds',
+                            order: 3,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: '5 of diamonds',
+                            order: 5,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: '6 of diamonds',
+                            order: 6,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: '7 of diamonds',
+                            order: 7,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: '8 of diamonds',
+                            order: 8,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: '9 of diamonds',
+                            order: 9,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: '10 of diamonds',
+                            order: 10,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: 'a of diamonds',
+                            order: 1,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: 'j of diamonds',
+                            order: 11,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: 'k of diamonds',
+                            order: 12,
+                            revealed: false
+                        }, {
+                            type: 'diamond',
+                            image: 'q of diamonds',
+                            order: 13,
+                            revealed: false
+                        },
+
+
+                        {
+                            type: 'spade',
+                            image: '2 of spades',
+                            order: 2,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: '3 of spades',
+                            order: 3,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: '4 of spades',
+                            order: 3,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: '5 of spades',
+                            order: 5,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: '6 of spades',
+                            order: 6,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: '7 of spades',
+                            order: 7,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: '8 of spades',
+                            order: 8,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: '9 of spades',
+                            order: 9,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: '10 of spades',
+                            order: 10,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: 'a of spades',
+                            order: 1,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: 'j of spades',
+                            order: 11,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: 'k of spades',
+                            order: 12,
+                            revealed: false
+                        }, {
+                            type: 'spade',
+                            image: 'q of spades',
+                            order: 13,
+                            revealed: false
+                        },
+                    ]
+                },
+            }
+        });
+    </script>
+</body>
+
+</html>

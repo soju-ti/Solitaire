@@ -18,13 +18,18 @@
         .game-container {
             display: grid;
             grid-template-columns: repeat(7, .1fr);
+            grid-template-rows: repeat(2, .75fr);
             padding: 50px;
+            transition: all 0.2s;
         }
         
         .stocks {
             display: grid;
             cursor: pointer;
             position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: rgb(0 0 0 / 25%) 0px 0px 5px 5px inset;
+            border-radius: 12px;
         }
         
         .stock {
@@ -81,21 +86,71 @@
         .card {
             border-radius: 5px;
         }
+        
+        .fade-move {
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .fade-move,
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+        }
+        /* 2. declare enter from and leave to state */
+        
+        .fade-enter-from,
+        .fade-leave-to {
+            transform: scaleY(0.01) translate(30px, 0);
+        }
+        /* 3. ensure leaving items are taken out of layout flow so that moving
+      animations can be calculated correctly. */
+        
+        .fade-leave-active {
+            position: absolute;
+        }
+        
+        .card-left {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid black;
+            z-index: 2;
+            padding: 10px;
+            border-radius: 50%;
+        }
     </style>
 </head>
 
 <body>
     <!-- #https://cardgames.io/solitaire/#rules -->
+    <!-- https://www.solitaire365.com/ -->
+
+    <!-- https://stackoverflow.com/questions/59567349/how-to-animate-todo-moving-from-one-list-to-another-with-vue-js -->
     <div class="game-container" id="app">
 
 
-        <div class="grid-item stocks" id="stocks">
+        <!-- <div class="grid-item stocks" id="stocks">
             <div class="stock-item" v-for="stock in stocks">
                 <img src="images/card-hidden.png" />
             </div>
-        </div>
-        <div class="grid-item empty-waste" id="empty-waste">
+        </div> -->
 
+
+
+        <div class="grid-item stocks" id="stocks" @click="addToWaste()">
+            <span class="card-left">{{stocks.length}}</span>
+            <div :key=`stock-${card.id}` v-for="(card,index) in stocks" class="stock-item">
+
+                <img src="images/card-hidden.png" />
+            </div>
+        </div>
+        <div class="grid-item empty-waste">
+            <span class="card-left">{{waste.length}}</span>
+            <div :key=`waste-${card.id}` v-for="(card,index) in waste" class="stock-item waste-item">
+
+                <img src="images/card-hidden.png" />
+            </div>
         </div>
         <div class="grid-item">
 
@@ -121,8 +176,6 @@
         </div>
 
 
-
-
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
 
@@ -132,31 +185,25 @@
             data() {
                 return {
                     cards: [],
-                    stocks: [],
-                    tableau: [],
-
+                    shuffle: [],
                 };
             },
 
             created() {
                 this.initializeCards();
 
-                let shuffle = this.cards.sort(() => Math.random() - 0.5)
+                this.cards = this.cards.sort(() => Math.random() - 0.5)
 
-                this.stocks = shuffle.slice(0, 24);
-
-                shuffle = shuffle.slice(24, 52)
-
-                for (let i = 1; i <= 7; i++) {
-                    this.tableau.push(shuffle.splice(0, i))
-                }
-
-                this.tableau.forEach((item, index) => {
-                    this.$set(this.tableau[index][item.length - 1], 'revealed', true);
+                this.cards.forEach((item, index) => {
+                    this.$set(this.cards[index], 'id', index + 1);
+                    this.$set(this.cards[index], 'list', index < 24 ? 'stocks' : 'tableau');
                 });
             },
 
             methods: {
+                addToWaste() {
+                    this.stocks[this.stocks.length - 1].list = 'waste';
+                },
                 initializeCards() {
                     this.cards = [{
                             type: 'club',
@@ -429,6 +476,34 @@
                         },
                     ]
                 },
+            },
+            computed: {
+                stocks: function() {
+                    return this.cards.filter(shuffle => {
+                        return shuffle.list == 'stocks'
+                    })
+                },
+                tableau: function() {
+                    let shuffle = this.cards.filter(item => {
+                        return item.list == 'tableau'
+                    })
+                    let tableau = [];
+                    console.log(shuffle);
+                    for (let i = 1; i <= 7; i++) {
+                        let items = shuffle.splice(0, i);
+                        items[items.length - 1].revealed = true;
+                        tableau.push(items)
+                    }
+
+                    return tableau;
+                },
+
+                waste: function() {
+                    return this.cards.filter(shuffle => {
+                        return shuffle.list == 'waste'
+                    })
+
+                }
             }
         });
     </script>

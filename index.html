@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solitaire</title>
 
+    <script src="jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <style>
         body {
             background: green;
@@ -20,7 +22,6 @@
             grid-template-columns: repeat(7, .1fr);
             grid-template-rows: repeat(2, .75fr);
             padding: 50px;
-            transition: all 0.2s;
         }
         
         .stocks {
@@ -42,13 +43,14 @@
         .stocks .stock-item {
             grid-row-start: 1;
             grid-column-start: 1;
+            position: absolute;
         }
         
         .stock-item img {
             width: 100px;
         }
         
-        .empty-waste {
+        .waste {
             display: grid;
             position: relative;
             background: rgba(0, 0, 0, 0.2);
@@ -56,7 +58,7 @@
             border-radius: 12px;
         }
         
-        .empty-waste .waste-item {
+        .waste .waste-item {
             grid-row-start: 1;
             grid-column-start: 1;
             top: 0;
@@ -87,28 +89,6 @@
             border-radius: 5px;
         }
         
-        .fade-move {
-            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        
-        .fade-move,
-        .fade-enter-active,
-        .fade-leave-active {
-            transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
-        }
-        /* 2. declare enter from and leave to state */
-        
-        .fade-enter-from,
-        .fade-leave-to {
-            transform: scaleY(0.01) translate(30px, 0);
-        }
-        /* 3. ensure leaving items are taken out of layout flow so that moving
-      animations can be calculated correctly. */
-        
-        .fade-leave-active {
-            position: absolute;
-        }
-        
         .card-left {
             position: absolute;
             top: 50%;
@@ -126,30 +106,21 @@
     <!-- #https://cardgames.io/solitaire/#rules -->
     <!-- https://www.solitaire365.com/ -->
 
-    <!-- https://stackoverflow.com/questions/59567349/how-to-animate-todo-moving-from-one-list-to-another-with-vue-js -->
     <div class="game-container" id="app">
-
-
-        <!-- <div class="grid-item stocks" id="stocks">
-            <div class="stock-item" v-for="stock in stocks">
-                <img src="images/card-hidden.png" />
-            </div>
-        </div> -->
-
-
-
         <div class="grid-item stocks" id="stocks" @click="addToWaste()">
-            <span class="card-left">{{stocks.length}}</span>
-            <div :key=`stock-${card.id}` v-for="(card,index) in stocks" class="stock-item">
+            <span class="card-left" v-show="!moving">{{stocks.length}}</span>
+            <div :key=`stock-${card.id}` v-for="(card,index) in stocks" class="stock-item" :id=`stock-${card.id}`>
 
                 <img src="images/card-hidden.png" />
             </div>
         </div>
-        <div class="grid-item empty-waste">
-            <span class="card-left">{{waste.length}}</span>
-            <div :key=`waste-${card.id}` v-for="(card,index) in waste" class="stock-item waste-item">
+        <div class="grid-item waste" id="waste">
+            <span class="card-left" v-show="!moving">{{waste.length}}</span>
+            <div :key=`waste-${card.id}` v-for="(card,index) in reverseWaste" class="stock-item waste-item">
 
-                <img src="images/card-hidden.png" />
+                <img src="images/card-hidden.png" v-show="!card.revealed" />
+
+                <img :src=`images/cards/${card.image}.png` v-show="card.revealed" class="card" />
             </div>
         </div>
         <div class="grid-item">
@@ -174,11 +145,8 @@
                 <img :src=`images/cards/${card.image}.png` v-show="card.revealed" class="card" />
             </div>
         </div>
-
-
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-
+    <script src="Cards.js"></script>
     <script>
         new Vue({
             el: '#app',
@@ -186,6 +154,7 @@
                 return {
                     cards: [],
                     shuffle: [],
+                    moving: false
                 };
             },
 
@@ -197,284 +166,34 @@
                 this.cards.forEach((item, index) => {
                     this.$set(this.cards[index], 'id', index + 1);
                     this.$set(this.cards[index], 'list', index < 24 ? 'stocks' : 'tableau');
+                    this.$set(this.cards[index], 'z-index', 0);
                 });
             },
 
             methods: {
-                addToWaste() {
-                    this.stocks[this.stocks.length - 1].list = 'waste';
-                },
                 initializeCards() {
-                    this.cards = [{
-                            type: 'club',
-                            image: '2 of clubs',
-                            order: 2,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: '3 of clubs',
-                            order: 3,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: '4 of clubs',
-                            order: 3,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: '5 of clubs',
-                            order: 5,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: '6 of clubs',
-                            order: 6,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: '7 of clubs',
-                            order: 7,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: '8 of clubs',
-                            order: 8,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: '9 of clubs',
-                            order: 9,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: '10 of clubs',
-                            order: 10,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: 'a of clubs',
-                            order: 1,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: 'j of clubs',
-                            order: 11,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: 'k of clubs',
-                            order: 12,
-                            revealed: false
-                        }, {
-                            type: 'club',
-                            image: 'q of clubs',
-                            order: 13,
-                            revealed: false
-                        },
-
-
-                        {
-                            type: 'heart',
-                            image: '2 of hearts',
-                            order: 2,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: '3 of hearts',
-                            order: 3,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: '4 of hearts',
-                            order: 3,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: '5 of hearts',
-                            order: 5,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: '6 of hearts',
-                            order: 6,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: '7 of hearts',
-                            order: 7,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: '8 of hearts',
-                            order: 8,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: '9 of hearts',
-                            order: 9,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: '10 of hearts',
-                            order: 10,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: 'a of hearts',
-                            order: 1,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: 'j of hearts',
-                            order: 11,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: 'k of hearts',
-                            order: 12,
-                            revealed: false
-                        }, {
-                            type: 'heart',
-                            image: 'q of hearts',
-                            order: 13,
-                            revealed: false
-                        },
-
-                        {
-                            type: 'diamond',
-                            image: '2 of diamonds',
-                            order: 2,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: '3 of diamonds',
-                            order: 3,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: '4 of diamonds',
-                            order: 3,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: '5 of diamonds',
-                            order: 5,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: '6 of diamonds',
-                            order: 6,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: '7 of diamonds',
-                            order: 7,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: '8 of diamonds',
-                            order: 8,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: '9 of diamonds',
-                            order: 9,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: '10 of diamonds',
-                            order: 10,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: 'a of diamonds',
-                            order: 1,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: 'j of diamonds',
-                            order: 11,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: 'k of diamonds',
-                            order: 12,
-                            revealed: false
-                        }, {
-                            type: 'diamond',
-                            image: 'q of diamonds',
-                            order: 13,
-                            revealed: false
-                        },
-
-
-                        {
-                            type: 'spade',
-                            image: '2 of spades',
-                            order: 2,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: '3 of spades',
-                            order: 3,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: '4 of spades',
-                            order: 3,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: '5 of spades',
-                            order: 5,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: '6 of spades',
-                            order: 6,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: '7 of spades',
-                            order: 7,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: '8 of spades',
-                            order: 8,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: '9 of spades',
-                            order: 9,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: '10 of spades',
-                            order: 10,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: 'a of spades',
-                            order: 1,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: 'j of spades',
-                            order: 11,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: 'k of spades',
-                            order: 12,
-                            revealed: false
-                        }, {
-                            type: 'spade',
-                            image: 'q of spades',
-                            order: 13,
-                            revealed: false
-                        },
-                    ]
+                    this.cards = cards;
+                },
+                addToWaste() {
+                    let lastItem = this.stocks[this.stocks.length - 1];
+                    let $clone = $(`#stock-${lastItem.id}`);
+                    this.moving = true;
+                    $clone.css({
+                        'z-index': 2
+                    });
+                    let lastWasteItem = this.waste[this.waste.length - 1];
+                    let cardIndex = -1;
+                    if (lastWasteItem) {
+                        cardIndex = this.cards.findIndex((card) => card.id == lastWasteItem.id);
+                    }
+                    $clone.animate({
+                        left: document.getElementById("waste").offsetLeft - 50 - 20 + 'px'
+                    }, "slow", () => {
+                        lastItem.list = 'waste';
+                        this.moving = false;
+                        let cardIndex = this.cards.findIndex((card) => card.id == lastItem.id);
+                        this.$set(this.cards[cardIndex], 'revealed', true);
+                    });
                 },
             },
             computed: {
@@ -488,7 +207,6 @@
                         return item.list == 'tableau'
                     })
                     let tableau = [];
-                    console.log(shuffle);
                     for (let i = 1; i <= 7; i++) {
                         let items = shuffle.splice(0, i);
                         items[items.length - 1].revealed = true;
@@ -503,7 +221,10 @@
                         return shuffle.list == 'waste'
                     })
 
-                }
+                },
+                reverseWaste: function() {
+                    return this.waste.reverse();
+                },
             }
         });
     </script>
